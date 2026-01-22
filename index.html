@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FRC Motor Reduction Calculator</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0c0f14;
+            --bg-secondary: #14181f;
+            --bg-card: #1a1f28;
+            --bg-elevated: #222833;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #22d3ee;
+            --accent-green: #34d399;
+            --accent-orange: #fb923c;
+            --accent-purple: #a78bfa;
+            --accent-red: #f87171;
+            --accent-yellow: #fbbf24;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2d3748;
+            --border-light: #3d4a5c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            padding: 0.35rem 0.9rem;
+            border-radius: 2rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            color: var(--bg-primary);
+        }
+
+        h1 {
+            font-size: clamp(1.75rem, 4vw, 2.25rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 400;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .card-icon.blue { background: rgba(59, 130, 246, 0.15); }
+        .card-icon.green { background: rgba(52, 211, 153, 0.15); }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Form elements */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-group select,
+        .form-group input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.6rem;
+            padding: 0.7rem 0.9rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            transition: all 0.15s ease;
+            width: 100%;
+        }
+
+        .form-group select:hover,
+        .form-group input:hover {
+            border-color: var(--border-light);
+        }
+
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-group select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 0.5rem;
+        }
+
+        /* Radio buttons styled as pills */
+        .radio-pills {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-pill {
+            position: relative;
+        }
+
+        .radio-pill input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .radio-pill label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 0.9rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .radio-pill label:hover {
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+
+        .radio-pill input:checked + label {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .radio-pill input:checked + label .pill-dot {
+            background: var(--accent-blue);
+        }
+
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.15s ease;
+        }
+
+        /* Reference info box */
+        .ref-info {
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .ref-info-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .motor-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .motor-indicator.neo { background: var(--accent-green); }
+        .motor-indicator.vortex { background: var(--accent-orange); }
+        .motor-indicator.falcon { background: var(--accent-red); }
+        .motor-indicator.kraken { background: var(--accent-blue); }
+
+        .ref-info-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ref-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .ref-stat {
+            text-align: center;
+        }
+
+        .ref-stat-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .ref-stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 0.2rem;
+        }
+
+        /* Target box */
+        .target-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(34, 211, 238, 0.08));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+            text-align: center;
+        }
+
+        .target-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.75rem;
+        }
+
+        .target-values {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+        }
+
+        .target-item {
+            text-align: center;
+        }
+
+        .target-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .target-label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        /* Results grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-card.x60 { border-top: 3px solid var(--accent-blue); }
+        .result-card.x44 { border-top: 3px solid var(--accent-purple); }
+
+        .result-header {
+            background: var(--bg-secondary);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .result-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .result-icon.x60 { background: linear-gradient(135deg, var(--accent-blue), #2563eb); }
+        .result-icon.x44 { background: linear-gradient(135deg, var(--accent-purple), #7c3aed); }
+
+        .result-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .result-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .result-badges {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mode-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.6rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-weight: 600;
+        }
+
+        .mode-badge.trap {
+            background: rgba(251, 146, 60, 0.15);
+            color: var(--accent-orange);
+        }
+
+        .mode-badge.foc {
+            background: rgba(34, 211, 238, 0.15);
+            color: var(--accent-cyan);
+        }
+
+        .reduction-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 0.35rem 0.7rem;
+            border-radius: 2rem;
+            background: var(--bg-primary);
+        }
+
+        .result-card.x60 .reduction-badge {
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+
+        .result-card.x44 .reduction-badge {
+            color: var(--accent-purple);
+            border: 1px solid var(--accent-purple);
+        }
+
+        .result-body {
+            padding: 1.25rem;
+        }
+
+        .stats-section {
+            margin-bottom: 1rem;
+        }
+
+        .stats-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .stats-section-title {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.35rem 0;
+        }
+
+        .stat-row:not(:last-child) {
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .stat-value.good { color: var(--accent-green); }
+        .stat-value.warn { color: var(--accent-yellow); }
+
+        /* Progress bar */
+        .progress-section {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .progress-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+        }
+
+        .progress-bar {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            height: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            transition: width 0.4s ease;
+        }
+
+        /* Info sections */
+        .info-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card.highlight {
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .info-card.warning {
+            border-left: 3px solid var(--accent-yellow);
+        }
+
+        .info-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .info-item h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+
+        .info-item p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        .verdict-box {
+            background: rgba(52, 211, 153, 0.08);
+            border: 1px solid rgba(52, 211, 153, 0.25);
+            border-radius: 0.6rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .verdict-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent-green);
+            margin-bottom: 0.4rem;
+        }
+
+        .verdict-box p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .notes-list {
+            list-style: none;
+        }
+
+        .notes-list li {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 0.3rem 0 0.3rem 1.25rem;
+            position: relative;
+        }
+
+        .notes-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.25rem 1rem;
+            }
+
+            .ref-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .target-values {
+                gap: 1.5rem;
+            }
+
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .result-badges {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo-badge">
+                <span>⚡</span>
+                <span>FRC Motor Tool</span>
+            </div>
+            <h1>Motor Reduction Calculator</h1>
+            <p class="subtitle">Convierte mecanismos de referencia a tu configuración de Kraken</p>
+        </header>
+
+        <!-- Reference Section -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon blue">📐</div>
+                <span class="card-title">Mecanismo de Referencia</span>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Motor de Referencia</label>
+                    <select id="refMotor" onchange="calculate()">
+                        <optgroup label="REV Robotics">
+                            <option value="neo">NEO 1.1</option>
+                            <option value="vortex">NEO Vortex</option>
+                        </optgroup>
+                        <optgroup label="VEX / CTRE">
+                            <option value="falcon">Falcon 500</option>
+                        </optgroup>
+                        <optgroup label="WCP / CTRE">
+                            <option value="kraken_x60">Kraken X60</option>
+                            <option value="kraken_x44">Kraken X44</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Reducción del Mecanismo</label>
+                    <input type="number" id="refReduction" value="4" min="0.1" step="0.1" onchange="calculate()" oninput="calculate()">
+                </div>
+
+                <div class="form-group">
+                    <label>Modo de Operación</label>
+                    <div class="radio-pills">
+                        <div class="radio-pill">
+                            <input type="radio" name="opMode" id="modeContinuous" value="continuous" checked onchange="calculate()">
+                            <label for="modeContinuous">
+                                <span class="pill-dot"></span>
+                                Continuo (~20A)
+                            </label>
+                        </div>
+                        <div class="radio-pill">
+                            <input type="radio" name="opMode" id="modePeak" value="peak" onchange="calculate()">
+                            <label for="modePeak">
+                                <span class="pill-dot"></span>
+                                Peak (≤40A)
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Conmutación Kraken</label>
+                    <div class="radio-pills">
+                        <div class="radio-pill">
+                            <input type="radio" name="commMode" id="commTrap" value="trap" checked onchange="calculate()">
+                            <label for="commTrap">
+                                <span class="pill-dot"></span>
+                                Trapezoidal
+                            </label>
+                        </div>
+                        <div class="radio-pill">
+                            <input type="radio" name="commMode" id="commFOC" value="foc" onchange="calculate()">
+                            <label for="commFOC">
+                                <span class="pill-dot"></span>
+                                FOC
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reference info -->
+            <div class="ref-info">
+                <div class="ref-info-header">
+                    <div class="motor-indicator neo" id="refMotorDot"></div>
+                    <span class="ref-info-name" id="refMotorName">NEO 1.1 @ Peak Efficiency</span>
+                </div>
+                <div class="ref-stats">
+                    <div class="ref-stat">
+                        <div class="ref-stat-value" id="refRpm">5,400</div>
+                        <div class="ref-stat-label">RPM Motor</div>
+                    </div>
+                    <div class="ref-stat">
+                        <div class="ref-stat-value" id="refTorque">0.3605</div>
+                        <div class="ref-stat-label">Torque (N·m)</div>
+                    </div>
+                    <div class="ref-stat">
+                        <div class="ref-stat-value" id="refCurrent">20.19</div>
+                        <div class="ref-stat-label">Corriente (A)</div>
+                    </div>
+                    <div class="ref-stat">
+                        <div class="ref-stat-value" id="refEff">84.14%</div>
+                        <div class="ref-stat-label">Eficiencia</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target -->
+            <div class="target-box">
+                <div class="target-title">🎯 Objetivo de Salida</div>
+                <div class="target-values">
+                    <div class="target-item">
+                        <div class="target-value" id="targetTorque">1.442</div>
+                        <div class="target-label">N·m Torque</div>
+                    </div>
+                    <div class="target-item">
+                        <div class="target-value" id="targetRpm">1,350</div>
+                        <div class="target-label">RPM Salida</div>
+                    </div>
+                    <div class="target-item">
+                        <div class="target-value" id="targetCurrent">~20</div>
+                        <div class="target-label">Amps Target</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results-grid">
+            <!-- X60 -->
+            <div class="result-card x60">
+                <div class="result-header">
+                    <div class="result-title">
+                        <div class="result-icon x60">X60</div>
+                        <div>
+                            <div class="result-name">Kraken X60</div>
+                            <div class="result-subtitle" id="x60Subtitle">@ ~20A</div>
+                        </div>
+                    </div>
+                    <div class="result-badges">
+                        <span class="mode-badge trap" id="x60ModeBadge">TRAP</span>
+                        <div class="reduction-badge" id="x60Reduction">4.61:1</div>
+                    </div>
+                </div>
+                <div class="result-body">
+                    <div class="stats-section">
+                        <div class="stats-section-title">Datos del Motor</div>
+                        <div class="stat-row">
+                            <span class="stat-label">RPM Motor</span>
+                            <span class="stat-value" id="x60MotorRpm">5,800</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Torque Motor</span>
+                            <span class="stat-value" id="x60MotorTorque">0.3131 N·m</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Corriente</span>
+                            <span class="stat-value good" id="x60Current">19.09 A</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Eficiencia</span>
+                            <span class="stat-value" id="x60Eff">83.02%</span>
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <div class="stats-section-title">Salida del Mecanismo</div>
+                        <div class="stat-row">
+                            <span class="stat-label">RPM Salida</span>
+                            <span class="stat-value" id="x60OutputRpm">1,259</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Torque Salida</span>
+                            <span class="stat-value good" id="x60OutputTorque">1.442 N·m</span>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">Corriente vs Referencia</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="x60CurrentBar" style="width: 95%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- X44 -->
+            <div class="result-card x44">
+                <div class="result-header">
+                    <div class="result-title">
+                        <div class="result-icon x44">X44</div>
+                        <div>
+                            <div class="result-name">Kraken X44</div>
+                            <div class="result-subtitle" id="x44Subtitle">@ ~20A</div>
+                        </div>
+                    </div>
+                    <div class="result-badges">
+                        <span class="mode-badge trap" id="x44ModeBadge">TRAP</span>
+                        <div class="reduction-badge" id="x44Reduction">5.94:1</div>
+                    </div>
+                </div>
+                <div class="result-body">
+                    <div class="stats-section">
+                        <div class="stats-section-title">Datos del Motor</div>
+                        <div class="stat-row">
+                            <span class="stat-label">RPM Motor</span>
+                            <span class="stat-value" id="x44MotorRpm">7,300</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Torque Motor</span>
+                            <span class="stat-value" id="x44MotorTorque">0.2426 N·m</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Corriente</span>
+                            <span class="stat-value good" id="x44Current">19.43 A</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Eficiencia</span>
+                            <span class="stat-value" id="x44Eff">79.54%</span>
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <div class="stats-section-title">Salida del Mecanismo</div>
+                        <div class="stat-row">
+                            <span class="stat-label">RPM Salida</span>
+                            <span class="stat-value" id="x44OutputRpm">1,228</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Torque Salida</span>
+                            <span class="stat-value good" id="x44OutputTorque">1.442 N·m</span>
+                        </div>
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">Corriente vs Referencia</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="x44CurrentBar" style="width: 96%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOC Info -->
+        <div class="info-card highlight">
+            <div class="info-title">📊 FOC vs Trapezoidal</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <h4>🔶 Trapezoidal</h4>
+                    <p><strong>Ventajas:</strong> Mayor eficiencia a ~20A (83% vs 79% X60), compatible con Phoenix 5 gratuito, control simple.</p>
+                    <p><strong>Ideal:</strong> Operación continua, mecanismos donde el consumo importa.</p>
+                </div>
+                <div class="info-item">
+                    <h4>🔷 FOC</h4>
+                    <p><strong>Ventajas:</strong> Mayor torque a corrientes altas, control más suave, menor ripple a bajas RPM.</p>
+                    <p><strong>Ideal:</strong> Picos de demanda, control preciso. Requiere Phoenix Pro ($).</p>
+                </div>
+            </div>
+            <div class="verdict-box">
+                <div class="verdict-title">✅ Recomendación</div>
+                <p><strong>Continuo:</strong> Usa Trapezoidal - mejor eficiencia a ~20A. <strong>Peak:</strong> Trapezoidal sigue siendo bueno; FOC solo si necesitas control ultra-suave o torque máximo absoluto.</p>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="info-card warning">
+            <div class="info-title">💡 Notas de Diseño</div>
+            <ul class="notes-list">
+                <li><strong>Continuo (~20A):</strong> Para mecanismos que operan constantemente (drivetrain, intake continuo)</li>
+                <li><strong>Peak (≤40A):</strong> Para mecanismos de uso corto/explosivo (escalador, shooter, arm)</li>
+                <li>El límite de 40A viene del breaker de la PDH - no podrás sostener más por canal</li>
+                <li>Para reducciones >6:1, considera dos etapas o planetario + etapa adicional</li>
+                <li>Datos del Falcon 500 basados en documentación de VEX/CTRE</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Reference motor data - all at peak efficiency
+        const motorData = {
+            neo: {
+                name: "NEO 1.1",
+                peak: { rpm: 5400, torque: 0.3605, current: 20.19, eff: 84.14 },
+                dotClass: "neo"
+            },
+            vortex: {
+                name: "NEO Vortex", 
+                peak: { rpm: 6100, torque: 0.6336, current: 46.45, eff: 72.61 },
+                dotClass: "vortex"
+            },
+            falcon: {
+                name: "Falcon 500",
+                peak: { rpm: 5931, torque: 0.707, current: 19.48, eff: 87.71 },
+                dotClass: "falcon"
+            },
+            kraken_x60: {
+                name: "Kraken X60",
+                peak: { rpm: 5600, torque: 0.5491, current: 31.34, eff: 85.62 },
+                dotClass: "kraken"
+            },
+            kraken_x44: {
+                name: "Kraken X44",
+                peak: { rpm: 7000, torque: 0.4017, current: 30.10, eff: 81.51 },
+                dotClass: "kraken"
+            }
+        };
+
+        // Kraken operating points for different modes
+        const krakenModes = {
+            trap: {
+                continuous: {
+                    x60: { rpm: 5800, torque: 0.3131, current: 19.09, eff: 83.02 },
+                    x44: { rpm: 7300, torque: 0.2426, current: 19.43, eff: 79.54 }
+                },
+                peak: {
+                    x60: { rpm: 5600, torque: 0.5491, current: 31.34, eff: 85.62 },
+                    x44: { rpm: 7000, torque: 0.4017, current: 30.10, eff: 81.51 }
+                }
+            },
+            foc: {
+                continuous: {
+                    x60: { rpm: 5600, torque: 0.2988, current: 18.58, eff: 78.59 },
+                    x44: { rpm: 7000, torque: 0.2500, current: 19.49, eff: 78.34 }
+                },
+                peak: {
+                    x60: { rpm: 5300, torque: 0.7843, current: 43.09, eff: 84.18 },
+                    x44: { rpm: 6700, torque: 0.4540, current: 32.77, eff: 81.02 }
+                }
+            }
+        };
+
+        function formatNumber(num, decimals = 2) {
+            return num.toLocaleString('en-US', { 
+                minimumFractionDigits: decimals, 
+                maximumFractionDigits: decimals 
+            });
+        }
+
+        function formatRpm(num) {
+            return Math.round(num).toLocaleString('en-US');
+        }
+
+        function calculate() {
+            const refMotorKey = document.getElementById('refMotor').value;
+            const refReduction = parseFloat(document.getElementById('refReduction').value) || 1;
+            const opMode = document.querySelector('input[name="opMode"]:checked').value;
+            const commMode = document.querySelector('input[name="commMode"]:checked').value;
+
+            const refMotor = motorData[refMotorKey];
+            const refPeak = refMotor.peak;
+
+            // Get Kraken data based on modes
+            const krakenData = krakenModes[commMode][opMode];
+            const modeText = commMode.toUpperCase();
+            const modeClass = commMode;
+            const subtitleText = opMode === 'continuous' ? '@ ~20A' : '@ Peak';
+
+            // Update reference display
+            document.getElementById('refMotorDot').className = `motor-indicator ${refMotor.dotClass}`;
+            document.getElementById('refMotorName').textContent = `${refMotor.name} @ Peak Efficiency`;
+            document.getElementById('refRpm').textContent = formatRpm(refPeak.rpm);
+            document.getElementById('refTorque').textContent = formatNumber(refPeak.torque, 4);
+            document.getElementById('refCurrent').textContent = formatNumber(refPeak.current);
+            document.getElementById('refEff').textContent = `${formatNumber(refPeak.eff)}%`;
+
+            // Calculate target output
+            const targetTorque = refPeak.torque * refReduction;
+            const targetRpm = refPeak.rpm / refReduction;
+            const targetCurrent = opMode === 'continuous' ? 20 : 40;
+
+            document.getElementById('targetTorque').textContent = formatNumber(targetTorque, 3);
+            document.getElementById('targetRpm').textContent = formatRpm(targetRpm);
+            document.getElementById('targetCurrent').textContent = opMode === 'continuous' ? '~20' : '≤40';
+
+            // Update subtitles and badges
+            document.getElementById('x60Subtitle').textContent = subtitleText;
+            document.getElementById('x44Subtitle').textContent = subtitleText;
+            document.getElementById('x60ModeBadge').textContent = modeText;
+            document.getElementById('x60ModeBadge').className = `mode-badge ${modeClass}`;
+            document.getElementById('x44ModeBadge').textContent = modeText;
+            document.getElementById('x44ModeBadge').className = `mode-badge ${modeClass}`;
+
+            // Calculate X60
+            const x60 = krakenData.x60;
+            const x60Reduction = targetTorque / x60.torque;
+            const x60OutputRpm = x60.rpm / x60Reduction;
+
+            document.getElementById('x60Reduction').textContent = `${formatNumber(x60Reduction)}:1`;
+            document.getElementById('x60MotorRpm').textContent = formatRpm(x60.rpm);
+            document.getElementById('x60MotorTorque').textContent = `${formatNumber(x60.torque, 4)} N·m`;
+            document.getElementById('x60Current').textContent = `${formatNumber(x60.current)} A`;
+            document.getElementById('x60Eff').textContent = `${formatNumber(x60.eff)}%`;
+            document.getElementById('x60OutputRpm').textContent = formatRpm(x60OutputRpm);
+            document.getElementById('x60OutputTorque').textContent = `${formatNumber(targetTorque, 3)} N·m`;
+
+            const x60CurrentPercent = Math.min((x60.current / targetCurrent) * 100, 100);
+            document.getElementById('x60CurrentBar').style.width = `${x60CurrentPercent}%`;
+
+            // Calculate X44
+            const x44 = krakenData.x44;
+            const x44Reduction = targetTorque / x44.torque;
+            const x44OutputRpm = x44.rpm / x44Reduction;
+
+            document.getElementById('x44Reduction').textContent = `${formatNumber(x44Reduction)}:1`;
+            document.getElementById('x44MotorRpm').textContent = formatRpm(x44.rpm);
+            document.getElementById('x44MotorTorque').textContent = `${formatNumber(x44.torque, 4)} N·m`;
+            document.getElementById('x44Current').textContent = `${formatNumber(x44.current)} A`;
+            document.getElementById('x44Eff').textContent = `${formatNumber(x44.eff)}%`;
+            document.getElementById('x44OutputRpm').textContent = formatRpm(x44OutputRpm);
+            document.getElementById('x44OutputTorque').textContent = `${formatNumber(targetTorque, 3)} N·m`;
+
+            const x44CurrentPercent = Math.min((x44.current / targetCurrent) * 100, 100);
+            document.getElementById('x44CurrentBar').style.width = `${x44CurrentPercent}%`;
+        }
+
+        // Initial calculation
+        calculate();
+    </script>
+</body>
+</html>
